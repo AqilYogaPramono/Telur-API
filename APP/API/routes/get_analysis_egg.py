@@ -1,4 +1,4 @@
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
@@ -73,6 +73,30 @@ async def get_egg_analysis_news(db: Session = Depends(get_db)):
             detail="Egg analysis news for today not found.",
         )
     return to_egg_detection_summary(row)
+
+
+@router.get("/egg-analysis-news/history", response_model=list[EggDetectionSummary])
+async def get_egg_analysis_news_history(db: Session = Depends(get_db)):
+    today = date.today()
+    start_date = today - timedelta(days=4)
+    end_date = today - timedelta(days=1)
+
+    rows = db.scalars(
+        select(EggDetection)
+        .where(func.date(EggDetection.detected_at).between(start_date, end_date))
+        .order_by(
+            EggDetection.detected_at.desc(),
+            EggDetection.id.desc(),
+        )
+    ).all()
+
+    latest_by_day: dict[date, EggDetectionSummary] = {}
+    for row in rows:
+        detection_day = row.detected_at.date()
+        if detection_day not in latest_by_day:
+            latest_by_day[detection_day] = to_egg_detection_summary(row)
+
+    return list(latest_by_day.values())
 
 
 @router.get("/egg-analysis/{id}", response_model=EggDetectionDetail)
