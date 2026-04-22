@@ -1,8 +1,8 @@
-from datetime import datetime
+from datetime import date, datetime
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session, selectinload
 
 from APP.core.database import get_db
@@ -32,6 +32,18 @@ class EggDetectionDetail(EggDetectionSummary):
     egg_classifications: list[EggClassificationItem]
 
 
+def to_egg_detection_summary(row: EggDetection) -> EggDetectionSummary:
+    return EggDetectionSummary(
+        id=row.id,
+        images_detection=row.images_detection,
+        egg_count=row.egg_count,
+        fertile_count=row.fertile_count,
+        infertile_count=row.infertile_count,
+        dead_count=row.dead_count,
+        detected_at=row.detected_at,
+    )
+
+
 @router.get("/egg-analysis", response_model=list[EggDetectionSummary])
 async def get_egg_analysis(db: Session = Depends(get_db)):
     rows = db.scalars(
@@ -40,18 +52,27 @@ async def get_egg_analysis(db: Session = Depends(get_db)):
             EggDetection.id.desc(),
         )
     ).all()
-    return [
-        EggDetectionSummary(
-            id=row.id,
-            images_detection=row.images_detection,
-            egg_count=row.egg_count,
-            fertile_count=row.fertile_count,
-            infertile_count=row.infertile_count,
-            dead_count=row.dead_count,
-            detected_at=row.detected_at,
+    return [to_egg_detection_summary(row) for row in rows]
+
+
+@router.get("/egg-analysis-news", response_model=EggDetectionSummary)
+async def get_egg_analysis_news(db: Session = Depends(get_db)):
+    today = date.today()
+    row = db.scalar(
+        select(EggDetection)
+        .where(func.date(EggDetection.detected_at) == today)
+        .order_by(
+            EggDetection.detected_at.desc(),
+            EggDetection.id.desc(),
         )
-        for row in rows
-    ]
+        .limit(1)
+    )
+    if row is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Egg analysis news for today not found.",
+        )
+    return to_egg_detection_summary(row)
 
 
 @router.get("/egg-analysis/{id}", response_model=EggDetectionDetail)
