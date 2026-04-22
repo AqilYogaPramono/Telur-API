@@ -1,3 +1,6 @@
+import re
+from pathlib import Path
+
 MAX_IMAGE_UPLOAD_BYTES = 10 * 1024 * 1024
 ALLOWED_IMAGE_EXTENSIONS = frozenset({".jpg", ".jpeg", ".png"})
 
@@ -45,3 +48,23 @@ def validate_image_upload(filename: str, content_type: str | None, image_bytes: 
     validate_image_content_type(content_type)
     validate_image_byte_size(image_bytes)
     return extension
+
+
+def safe_preview_label_from_upload_filename(filename: str, max_length: int = 80) -> str:
+    stripped = filename.strip()
+    if not stripped:
+        return "upload"
+    stem = Path(stripped).stem
+    value = re.sub(r"[^A-Za-z0-9_-]+", "-", stem)
+    value = value.strip("-")
+    if not value:
+        return "upload"
+    return value[:max_length]
+
+
+def safe_label_for_filename(label: str, max_length: int = 80) -> str:
+    value = re.sub(r"[^A-Za-z0-9_-]+", "-", label.strip())
+    value = value.strip("-")
+    if not value:
+        return "unknown"
+    return value[:max_length]
