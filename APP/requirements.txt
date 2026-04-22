@@ -7,3 +7,5 @@ python-dotenv
 opencv-python-headless
 ultralytics
 rembg
+SQLAlchemy
+PyMySQL
