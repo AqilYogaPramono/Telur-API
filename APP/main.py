@@ -21,7 +21,7 @@ PUBLIC_DIR.mkdir(parents=True, exist_ok=True)
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
-    from APP.services.egg_detection_template_matching_experiment import ensure_templates_loaded
+    from APP.services.egg_detection_template_matching import ensure_templates_loaded
 
     ensure_templates_loaded()
     yield

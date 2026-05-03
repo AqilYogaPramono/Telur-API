@@ -13,8 +13,15 @@ from APP.services.egg_classification import (
     resize_rgba_to_cnn_edge,
 )
 from APP.services.egg_detection import detect_egg_boxes_xyxy, render_detection_overlay_jpeg
+from APP.services.egg_detection_template_matching import (
+    match_best_template_in_crop,
+    templates_available,
+)
 from APP.services.encode_png import rgba_uint8_to_png_bytes
 from APP.services.remove_background import remove_background
+
+_YOLO_CONTEXT_PAD = 40
+_TEMPLATE_MATCH_MIN_SCORE = 0.7
 
 
 @dataclass(frozen=True)
@@ -51,7 +58,22 @@ def analyze_egg_yolo_crop_sync(image_bytes: bytes) -> YoloCropAnalysisResult:
 
     for box in boxes:
         x1, y1, x2, y2 = map(int, box)
-        crop = crop_bgr_region(image_bgr, x1, y1, x2, y2)
+        if templates_available():
+            x1p = max(0, x1 - _YOLO_CONTEXT_PAD)
+            y1p = max(0, y1 - _YOLO_CONTEXT_PAD)
+            x2p = min(image_bgr.shape[1], x2 + _YOLO_CONTEXT_PAD)
+            y2p = min(image_bgr.shape[0], y2 + _YOLO_CONTEXT_PAD)
+            padded = image_bgr[y1p:y2p, x1p:x2p]
+            if padded.size == 0:
+                continue
+            local_box, tmpl_score = match_best_template_in_crop(padded)
+            if local_box is None or tmpl_score < _TEMPLATE_MATCH_MIN_SCORE:
+                continue
+            lx1, ly1, lx2, ly2 = local_box
+            gx1, gy1, gx2, gy2 = x1p + lx1, y1p + ly1, x1p + lx2, y1p + ly2
+        else:
+            gx1, gy1, gx2, gy2 = x1, y1, x2, y2
+        crop = crop_bgr_region(image_bgr, gx1, gy1, gx2, gy2)
         if crop.size == 0:
             continue
         rgba_cutout = remove_background(crop)
@@ -68,7 +90,7 @@ def analyze_egg_yolo_crop_sync(image_bytes: bytes) -> YoloCropAnalysisResult:
         else:
             infertile_count += 1
         previews.append(EggCropPreview(egg_index=egg_index, classification=cnn, png_bytes=png_bytes))
-        valid_boxes.append((x1, y1, x2, y2))
+        valid_boxes.append((gx1, gy1, gx2, gy2))
         overlay_items.append(
             {
                 "egg_number": egg_index,

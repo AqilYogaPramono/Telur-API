@@ -11,7 +11,7 @@ from APP.services.egg_classification_experiment import (
     resize_rgba_to_cnn_edge,
 )
 from APP.services.egg_detection_experiment import detect_egg_boxes_xyxy, render_detection_overlay_jpeg
-from APP.services.egg_detection_template_matching_experiment import (
+from APP.services.egg_detection_template_matching import (
     match_best_template_in_crop,
     templates_available,
 )
