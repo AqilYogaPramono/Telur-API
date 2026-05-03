@@ -17,6 +17,14 @@ class EggCNNClassification:
     is_mati: bool
 
 
+def overlay_caption_for_egg(egg_number: int, classification_label: str | None) -> str:
+    raw = classification_label if classification_label is not None else ""
+    label = str(raw).strip()
+    if label:
+        return f"Telur {egg_number} - {label}"
+    return f"Telur {egg_number}"
+
+
 def _read_class_names() -> list[str]:
     if not _CLASS_NAMES_PATH.is_file():
         raise ValueError("Class names file was not found at models/class_names.json.")

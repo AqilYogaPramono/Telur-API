@@ -64,7 +64,14 @@ def analyze_egg_yolo_crop_sync(image_bytes: bytes) -> YoloCropAnalysisResult:
             infertile_count += 1
         previews.append(EggCropPreview(egg_index=egg_index, classification=cnn, png_bytes=png_bytes))
         valid_boxes.append((x1, y1, x2, y2))
-        overlay_items.append({"egg_number": egg_index, "is_fertile": cnn.is_fertile, "is_mati": cnn.is_mati})
+        overlay_items.append(
+            {
+                "egg_number": egg_index,
+                "is_fertile": cnn.is_fertile,
+                "is_mati": cnn.is_mati,
+                "classification_label": cnn.classification_label,
+            }
+        )
 
     overlay_filename = f"{uuid4().hex}.jpg"
     overlay_bytes = render_detection_overlay_jpeg(image_bgr, valid_boxes, overlay_items)
