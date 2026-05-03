@@ -7,7 +7,11 @@ import cv2
 import numpy as np
 
 from APP.services.crop_image import crop_bgr_region
-from APP.services.egg_classification import EggCNNClassification, classify_egg_from_image_bytes
+from APP.services.egg_classification import (
+    EggCNNClassification,
+    classify_egg_from_image_bytes,
+    resize_rgba_to_cnn_edge,
+)
 from APP.services.egg_detection import detect_egg_boxes_xyxy, render_detection_overlay_jpeg
 from APP.services.encode_png import rgba_uint8_to_png_bytes
 from APP.services.remove_background import remove_background
@@ -51,7 +55,8 @@ def analyze_egg_yolo_crop_sync(image_bytes: bytes) -> YoloCropAnalysisResult:
         if crop.size == 0:
             continue
         rgba_cutout = remove_background(crop)
-        png_bytes = rgba_uint8_to_png_bytes(rgba_cutout)
+        rgba_224 = resize_rgba_to_cnn_edge(rgba_cutout)
+        png_bytes = rgba_uint8_to_png_bytes(rgba_224)
         if png_bytes is None:
             continue
         egg_index = len(previews) + 1

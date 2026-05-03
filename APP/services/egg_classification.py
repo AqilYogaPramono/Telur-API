@@ -7,6 +7,7 @@ import numpy as np
 _REPO_ROOT = Path(__file__).resolve().parents[2]
 _MODEL_PATH = _REPO_ROOT / "models" / "model_cnn_v2.h5"
 _CLASS_NAMES_PATH = _REPO_ROOT / "models" / "class_names.json"
+CNN_INPUT_EDGE = 224
 
 
 @dataclass(frozen=True)
@@ -23,6 +24,17 @@ def overlay_caption_for_egg(egg_number: int, classification_label: str | None) -
     if label:
         return f"Telur {egg_number} - {label}"
     return f"Telur {egg_number}"
+
+
+def resize_rgba_to_cnn_edge(rgba: np.ndarray) -> np.ndarray:
+    import cv2
+
+    if rgba.ndim != 3 or rgba.shape[2] != 4:
+        raise ValueError("Expected RGBA image with shape HxWx4.")
+    h, w = rgba.shape[0], rgba.shape[1]
+    if h == CNN_INPUT_EDGE and w == CNN_INPUT_EDGE:
+        return rgba
+    return cv2.resize(rgba, (CNN_INPUT_EDGE, CNN_INPUT_EDGE), interpolation=cv2.INTER_LINEAR)
 
 
 def _read_class_names() -> list[str]:
@@ -46,14 +58,14 @@ def _load_cnn_and_classes():
 
 
 _cnn_model, _class_names = _load_cnn_and_classes()
-_cnn_model.predict(np.zeros((1, 224, 224, 3), dtype=np.float32), verbose=0)
+_cnn_model.predict(np.zeros((1, CNN_INPUT_EDGE, CNN_INPUT_EDGE, 3), dtype=np.float32), verbose=0)
 
 
 def classify_egg_from_image_bytes(image_bytes: bytes) -> EggCNNClassification:
     import tensorflow as tf
 
     image_tensor = tf.image.decode_image(tf.constant(image_bytes), channels=3)
-    image_tensor = tf.image.resize(image_tensor, [224, 224])
+    image_tensor = tf.image.resize(image_tensor, [CNN_INPUT_EDGE, CNN_INPUT_EDGE])
     image_tensor = tf.expand_dims(image_tensor, axis=0)
     predictions = _cnn_model.predict(image_tensor, verbose=0)
     class_index = int(np.argmax(predictions))
