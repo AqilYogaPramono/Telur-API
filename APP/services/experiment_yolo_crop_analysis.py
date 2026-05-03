@@ -81,6 +81,7 @@ def run_yolo_crop_experiment_sync(
                 "egg_number": egg_index,
                 "is_fertile": cnn.is_fertile,
                 "is_mati": cnn.is_mati,
+                "classification_label": cnn.classification_label,
             }
         )
         crop_filename = f"{safe_label_for_filename(cnn.classification_label)} - egg {egg_index}.png"
