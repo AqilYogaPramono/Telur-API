@@ -1,3 +1,4 @@
+from contextlib import asynccontextmanager
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -17,7 +18,16 @@ from APP.API.routes.get_analysis_egg import router as egg_records_router
 PUBLIC_DIR = Path(__file__).resolve().parent / "public"
 PUBLIC_DIR.mkdir(parents=True, exist_ok=True)
 
-app = FastAPI(title="Telur API", version="1.0.0")
+
+@asynccontextmanager
+async def lifespan(_: FastAPI):
+    from APP.services.egg_detection_template_matching import ensure_templates_loaded
+
+    ensure_templates_loaded()
+    yield
+
+
+app = FastAPI(title="Telur API", version="1.0.0", lifespan=lifespan)
 app.mount("/public", StaticFiles(directory=str(PUBLIC_DIR)), name="public")
 app.include_router(egg_experiment_router)
 app.include_router(egg_production_router)

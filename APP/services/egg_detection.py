@@ -4,6 +4,8 @@ from typing import Any
 import cv2
 import numpy as np
 
+from APP.services.egg_classification import overlay_caption_for_egg
+
 _REPO_ROOT = Path(__file__).resolve().parents[2]
 _YOLO_MODEL_PATH = _REPO_ROOT / "models" / "detection_egg_v1.pt"
 _yolo_model = None
@@ -42,8 +44,8 @@ def render_detection_overlay_jpeg(
     overlay = image_bgr.copy()
     height_img, width_img = overlay.shape[:2]
     font = cv2.FONT_HERSHEY_SIMPLEX
-    base_scale = 1.0
-    min_scale = 0.45
+    base_scale = 0.58
+    min_scale = 0.26
     thickness = 2
     pad = 8
     gap = 6
@@ -59,12 +61,13 @@ def render_detection_overlay_jpeg(
         cv2.rectangle(overlay, (x1, y1), (x2, y2), color, 2)
 
         egg_number = item["egg_number"]
-        text = f"Egg {egg_number}"
+        text = overlay_caption_for_egg(egg_number, item.get("classification_label"))
+
+        max_text_width = max(20, width_img - (pad * 2))
         scale = base_scale
         (text_width, text_height), baseline = cv2.getTextSize(text, font, scale, thickness)
-        max_text_width = max(20, width_img - (pad * 2))
         while text_width > max_text_width and scale > min_scale:
-            scale = max(min_scale, scale - 0.05)
+            scale = max(min_scale, scale - 0.04)
             (text_width, text_height), baseline = cv2.getTextSize(text, font, scale, thickness)
 
         def text_rect(text_x: int, baseline_y: int) -> tuple[int, int, int, int]:
@@ -74,7 +77,7 @@ def render_detection_overlay_jpeg(
             bottom = baseline_y + baseline + pad
             return (left, top, right, bottom)
 
-        def fits_image(rect: tuple[int, int, int, int]) -> bool:
+        def fits_image_rect(rect: tuple[int, int, int, int]) -> bool:
             left, top, right, bottom = rect
             return top >= 0 and left >= 0 and right <= width_img and bottom <= height_img
 
@@ -82,18 +85,19 @@ def render_detection_overlay_jpeg(
         text_x0 = max(pad, min(x1, width_img - text_width - pad))
         candidates.append((text_x0, y1 - gap))
         candidates.append((text_x0, y2 + text_height + baseline + gap))
-        for delta_x in (40, 80, 120, -40, -80, 160, -120):
+        for delta_x in (40, 80, 120, 160, -40, -80, -120, 200, -160):
             text_x = max(pad, min(x1 + delta_x, width_img - text_width - pad))
             candidates.append((text_x, y1 - gap))
             candidates.append((text_x, y2 + text_height + baseline + gap))
-        for step in range(1, 8):
-            candidates.append((text_x0, y1 - gap - step * (text_height + baseline + pad * 2)))
-            candidates.append((text_x0, y2 + text_height + baseline + gap + step * (text_height + baseline + pad * 2)))
+        for step in range(1, 10):
+            step_y = step * (text_height + baseline + pad * 2)
+            candidates.append((text_x0, y1 - gap - step_y))
+            candidates.append((text_x0, y2 + text_height + baseline + gap + step_y))
 
         chosen: tuple[int, int, tuple[int, int, int, int]] | None = None
         for text_x, baseline_y in candidates:
             rect = text_rect(text_x, baseline_y)
-            if not fits_image(rect):
+            if not fits_image_rect(rect):
                 continue
             if any(_rects_overlap(rect, prev) for prev in placed):
                 continue
@@ -104,6 +108,9 @@ def render_detection_overlay_jpeg(
             text_x = max(pad, min(x1, width_img - text_width - pad))
             baseline_y = min(y2 + text_height + baseline + gap, height_img - baseline - pad)
             rect = text_rect(text_x, baseline_y)
+            while rect[3] > height_img and baseline_y > text_height + gap:
+                baseline_y -= 6
+                rect = text_rect(text_x, baseline_y)
         else:
             text_x, baseline_y, rect = chosen
 
