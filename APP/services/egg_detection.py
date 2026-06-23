@@ -7,7 +7,9 @@ import numpy as np
 from APP.services.egg_classification import overlay_caption_for_egg
 
 _REPO_ROOT = Path(__file__).resolve().parents[2]
-_YOLO_MODEL_PATH = _REPO_ROOT / "models" / "detection_egg_v1.pt"
+_YOLO_MODEL_PATH = _REPO_ROOT / "models" / "detection_egg_v2.pt"
+_YOLO_CONF = 0.85
+_YOLO_IOU = 0.4
 _yolo_model = None
 
 
@@ -15,7 +17,7 @@ def _load_yolo_model():
     global _yolo_model
     if _yolo_model is None:
         if not _YOLO_MODEL_PATH.is_file():
-            raise ValueError("YOLO model file was not found at models/detection_egg_v1.pt.")
+            raise ValueError("YOLO model file was not found at models/detection_egg_v2.pt.")
         from ultralytics import YOLO
 
         _yolo_model = YOLO(str(_YOLO_MODEL_PATH))
@@ -24,7 +26,7 @@ def _load_yolo_model():
 
 def detect_egg_boxes_xyxy(image_bgr: np.ndarray) -> np.ndarray:
     model = _load_yolo_model()
-    result = model(image_bgr)[0]
+    result = model(image_bgr, conf=_YOLO_CONF, iou=_YOLO_IOU)[0]
     if result.boxes is None or len(result.boxes.xyxy) == 0:
         return np.zeros((0, 4), dtype=np.float32)
     return result.boxes.xyxy.cpu().numpy()

@@ -1,3 +1,4 @@
+import time
 from pathlib import Path
 
 from fastapi import APIRouter, File, HTTPException, UploadFile
@@ -14,21 +15,18 @@ PUBLIC_DIR = APP_DIR / "public"
 
 router = APIRouter(prefix="/experiment", tags=["Egg Analysis - Experiment"])
 
-
 class EggClassificationDirectBody(BaseModel):
     classification_label: str
     confidence_score: float
 
-
 class AnalyzeEggDirectResponse(BaseModel):
+    response_time_seconds: float
     egg_classifications: EggClassificationDirectBody
-
 
 class EggClassificationYoloItem(BaseModel):
     egg_index: int
     classification_label: str
     confidence_score: float
-
 
 class EggDetectionsYoloCropBody(BaseModel):
     images_detection: str
@@ -38,18 +36,16 @@ class EggDetectionsYoloCropBody(BaseModel):
     dead_count: int
     egg_classifications: list[EggClassificationYoloItem]
 
-
 class AnalyzeEggYoloCropResponse(BaseModel):
+    response_time_seconds: float
     egg_detections: EggDetectionsYoloCropBody
 
 
 def _map_upload_validation_error(error: UploadValidationError) -> HTTPException:
     return HTTPException(status_code=error.status_code, detail=error.message)
 
-
 async def _read_upload_bytes(file: UploadFile) -> bytes:
     return await file.read()
-
 
 def _map_inference_http_exception(error: Exception) -> HTTPException:
     if isinstance(error, TimeoutError):
@@ -60,7 +56,6 @@ def _map_inference_http_exception(error: Exception) -> HTTPException:
     if isinstance(error, ValueError):
         return HTTPException(status_code=400, detail=str(error))
     return HTTPException(status_code=500, detail=f"Prediction failed: {error}")
-
 
 @router.post("/analyze-egg/direct", response_model=AnalyzeEggDirectResponse)
 async def analyze_egg_experiment_direct(file: UploadFile = File(...)):
@@ -87,9 +82,9 @@ async def analyze_egg_experiment_direct(file: UploadFile = File(...)):
         )
     )
 
-
 @router.post("/analyze-egg/yolo-crop", response_model=AnalyzeEggYoloCropResponse)
 async def analyze_egg_experiment_yolo_crop(file: UploadFile = File(...)):
+    start_time = time.perf_counter()
     clear_public_preview_files(PUBLIC_DIR)
     image_bytes = await _read_upload_bytes(file)
     try:
@@ -108,6 +103,7 @@ async def analyze_egg_experiment_yolo_crop(file: UploadFile = File(...)):
     except Exception as error:
         raise _map_inference_http_exception(error) from error
     return AnalyzeEggYoloCropResponse(
+        response_time_seconds=round(time.perf_counter() - start_time, 1),
         egg_detections=EggDetectionsYoloCropBody(
             images_detection=outcome.images_detection,
             egg_count=outcome.egg_count,
