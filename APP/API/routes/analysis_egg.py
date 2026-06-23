@@ -12,16 +12,13 @@ router = APIRouter(tags=["Egg Analysis - Production"])
 class AnalyzeEggQueuedResponse(BaseModel):
     job_id: int
 
-
 class AnalyzeEggJobStatusResponse(BaseModel):
     status: Literal["queued", "running", "succeeded", "failed"]
     result_id: int | None = None
     error: str | None = None
 
-
 def _map_upload_validation_error(error: UploadValidationError) -> HTTPException:
     return HTTPException(status_code=error.status_code, detail=error.message)
-
 
 @router.get("/analyze-egg/jobs/{job_id}", response_model=AnalyzeEggJobStatusResponse)
 async def get_analyze_egg_job_status(job_id: int):
@@ -34,7 +31,6 @@ async def get_analyze_egg_job_status(job_id: int):
         result_id=state.get("result_id"),
         error=state.get("error"),
     )
-
 
 @router.post("/analyze-egg")
 async def analyze_egg_production(
