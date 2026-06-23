@@ -1,6 +1,14 @@
 import cv2
 import numpy as np
-from rembg import remove
+from rembg import new_session, remove
+
+_u2netp_session = None
+
+def ensure_u2netp_session():
+    global _u2netp_session
+    if _u2netp_session is None:
+        _u2netp_session = new_session("u2netp")
+    return _u2netp_session
 
 
 def _refine_alpha_mask(
@@ -33,7 +41,7 @@ def remove_background(
     blur_kernel_size: int = 3,
 ) -> np.ndarray:
     image_rgb = cv2.cvtColor(image_bgr, cv2.COLOR_BGR2RGB)
-    output = remove(image_rgb)
+    output = remove(image_rgb, session=ensure_u2netp_session())
     if not isinstance(output, np.ndarray):
         output = np.asarray(output)
     if output.ndim == 3 and output.shape[2] == 4:

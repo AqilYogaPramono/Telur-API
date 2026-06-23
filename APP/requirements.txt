@@ -8,6 +8,7 @@ python-dotenv
 opencv-python-headless
 ultralytics
 rembg
+onnxruntime
 SQLAlchemy
 PyMySQL
 google-api-python-client
