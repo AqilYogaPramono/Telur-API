@@ -10,7 +10,6 @@ def ensure_u2netp_session():
         _u2netp_session = new_session("u2netp")
     return _u2netp_session
 
-
 def _refine_alpha_mask(
     alpha: np.ndarray,
     *,
@@ -30,7 +29,6 @@ def _refine_alpha_mask(
             k += 1
         mask = cv2.GaussianBlur(mask, (k, k), 0)
     return mask
-
 
 def remove_background(
     image_bgr: np.ndarray,

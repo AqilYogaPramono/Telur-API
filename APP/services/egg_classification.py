@@ -9,14 +9,12 @@ _MODEL_PATH = _REPO_ROOT / "models" / "model_cnn_v2.h5"
 _CLASS_NAMES_PATH = _REPO_ROOT / "models" / "class_names.json"
 CNN_INPUT_EDGE = 224
 
-
 @dataclass(frozen=True)
 class EggCNNClassification:
     classification_label: str
     confidence_score: float
     is_fertile: bool
     is_mati: bool
-
 
 def overlay_caption_for_egg(egg_number: int, classification_label: str | None) -> str:
     raw = classification_label if classification_label is not None else ""
@@ -46,7 +44,6 @@ def _read_class_names() -> list[str]:
         raise ValueError("Class names file is invalid. It must be a non-empty JSON array.")
     return [str(item) for item in data]
 
-
 def _load_cnn_and_classes():
     if not _MODEL_PATH.is_file():
         raise ValueError("CNN model file was not found at models/model_cnn_v2.h5.")
@@ -56,10 +53,8 @@ def _load_cnn_and_classes():
     names = _read_class_names()
     return model, names
 
-
 _cnn_model, _class_names = _load_cnn_and_classes()
 _cnn_model.predict(np.zeros((1, CNN_INPUT_EDGE, CNN_INPUT_EDGE, 3), dtype=np.float32), verbose=0)
-
 
 def classify_egg_from_image_bytes(image_bytes: bytes) -> EggCNNClassification:
     import tensorflow as tf
@@ -79,4 +74,3 @@ def classify_egg_from_image_bytes(image_bytes: bytes) -> EggCNNClassification:
         is_fertile=is_fertile,
         is_mati=is_mati,
     )
-

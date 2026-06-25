@@ -11,17 +11,14 @@ from APP.services.gdrive_service import upload_production_analysis
 from APP.services.inference_runner import run_sync_with_inference_timeout
 from APP.services.predict_egg import analyze_egg_yolo_crop_sync
 
-
 class JobState(TypedDict, total=False):
     status: Literal["queued", "running", "succeeded", "failed"]
     result_id: int
     error: str
 
-
 _job_lock = asyncio.Lock()
 _next_job_id = 1
 _jobs: dict[int, JobState] = {}
-
 
 async def enqueue_production_analysis_job(image_bytes: bytes) -> int:
     global _next_job_id
@@ -32,14 +29,12 @@ async def enqueue_production_analysis_job(image_bytes: bytes) -> int:
     asyncio.create_task(_run_production_analysis_job(job_id, image_bytes))
     return job_id
 
-
 async def get_production_analysis_job_state(job_id: int) -> JobState:
     async with _job_lock:
         state = _jobs.get(job_id)
         if state is None:
             raise KeyError(f"Job {job_id} not found.")
         return dict(state)
-
 
 async def _run_production_analysis_job(job_id: int, image_bytes: bytes) -> None:
     async with _job_lock:

@@ -4,13 +4,11 @@ from pathlib import Path
 MAX_IMAGE_UPLOAD_BYTES = 10 * 1024 * 1024
 ALLOWED_IMAGE_EXTENSIONS = frozenset({".jpg", ".jpeg", ".png"})
 
-
 class UploadValidationError(Exception):
     def __init__(self, message: str, status_code: int = 400):
         super().__init__(message)
         self.message = message
         self.status_code = status_code
-
 
 def normalized_image_extension(filename: str) -> str:
     stripped = filename.strip()
@@ -27,11 +25,9 @@ def normalized_image_extension(filename: str) -> str:
         )
     return extension
 
-
 def validate_image_content_type(content_type: str | None) -> None:
     if not content_type or not content_type.startswith("image/"):
         raise UploadValidationError("Only image files are allowed.")
-
 
 def validate_image_byte_size(image_bytes: bytes, max_bytes: int = MAX_IMAGE_UPLOAD_BYTES) -> None:
     if not image_bytes:
@@ -42,13 +38,11 @@ def validate_image_byte_size(image_bytes: bytes, max_bytes: int = MAX_IMAGE_UPLO
             status_code=413,
         )
 
-
 def validate_image_upload(filename: str, content_type: str | None, image_bytes: bytes) -> str:
     extension = normalized_image_extension(filename)
     validate_image_content_type(content_type)
     validate_image_byte_size(image_bytes)
     return extension
-
 
 def safe_preview_label_from_upload_filename(filename: str, max_length: int = 80) -> str:
     stripped = filename.strip()
@@ -60,7 +54,6 @@ def safe_preview_label_from_upload_filename(filename: str, max_length: int = 80)
     if not value:
         return "upload"
     return value[:max_length]
-
 
 def safe_label_for_filename(label: str, max_length: int = 80) -> str:
     value = re.sub(r"[^A-Za-z0-9_-]+", "-", label.strip())

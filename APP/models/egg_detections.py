@@ -11,7 +11,6 @@ from APP.core.database import Base
 if TYPE_CHECKING:
     from APP.models.egg_classifications import EggClassification
 
-
 class EggDetection(Base):
     __tablename__ = "egg_detections"
 

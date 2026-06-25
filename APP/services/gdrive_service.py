@@ -12,12 +12,10 @@ from APP.core.gdrive import (
     upload_bytes,
 )
 
-
 def _upload_fail_reason(error: BaseException) -> str:
     if isinstance(error, HttpError):
         return http_error_detail(error)
     return str(error)[:400]
-
 
 def upload_production_analysis(
     overlay_jpeg_bytes: bytes | None,
@@ -74,4 +72,3 @@ def upload_production_analysis(
         "message": message,
         "uploaded_any": bool(file_ids),
     }
-

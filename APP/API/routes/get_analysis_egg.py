@@ -11,7 +11,6 @@ from APP.models.egg_detections import EggDetection
 
 router = APIRouter(tags=["Egg Analysis - Records"])
 
-
 class EggDetectionSummary(BaseModel):
     id: int
     images_detection: str
@@ -21,16 +20,13 @@ class EggDetectionSummary(BaseModel):
     dead_count: int
     detected_at: datetime
 
-
 class EggClassificationItem(BaseModel):
     egg_index: int
     classification_label: str
     confidence_score: float
 
-
 class EggDetectionDetail(EggDetectionSummary):
     egg_classifications: list[EggClassificationItem]
-
 
 def to_egg_detection_summary(row: EggDetection) -> EggDetectionSummary:
     return EggDetectionSummary(
@@ -43,7 +39,6 @@ def to_egg_detection_summary(row: EggDetection) -> EggDetectionSummary:
         detected_at=row.detected_at,
     )
 
-
 @router.get("/egg-analysis", response_model=list[EggDetectionSummary])
 async def get_egg_analysis(db: Session = Depends(get_db)):
     rows = db.scalars(
@@ -53,7 +48,6 @@ async def get_egg_analysis(db: Session = Depends(get_db)):
         )
     ).all()
     return [to_egg_detection_summary(row) for row in rows]
-
 
 @router.get("/egg-analysis-news", response_model=EggDetectionSummary)
 async def get_egg_analysis_news(db: Session = Depends(get_db)):
@@ -73,7 +67,6 @@ async def get_egg_analysis_news(db: Session = Depends(get_db)):
             detail="Egg analysis news for today not found.",
         )
     return to_egg_detection_summary(row)
-
 
 @router.get("/egg-analysis-news/history", response_model=list[EggDetectionSummary])
 async def get_egg_analysis_news_history(db: Session = Depends(get_db)):
@@ -97,7 +90,6 @@ async def get_egg_analysis_news_history(db: Session = Depends(get_db)):
             latest_by_day[detection_day] = to_egg_detection_summary(row)
 
     return list(latest_by_day.values())
-
 
 @router.get("/egg-analysis/{id}", response_model=EggDetectionDetail)
 async def get_egg_analysis_by_id(id: int, db: Session = Depends(get_db)):
@@ -126,4 +118,3 @@ async def get_egg_analysis_by_id(id: int, db: Session = Depends(get_db)):
             for item in classifications
         ],
     )
-
