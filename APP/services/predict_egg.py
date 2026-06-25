@@ -16,13 +16,11 @@ from APP.services.egg_detection import detect_egg_boxes_xyxy, render_detection_o
 from APP.services.encode_png import rgba_uint8_to_png_bytes
 from APP.services.remove_background import remove_background
 
-
 @dataclass(frozen=True)
 class EggCropPreview:
     egg_index: int
     classification: EggCNNClassification
     png_bytes: bytes
-
 
 @dataclass(frozen=True)
 class YoloCropAnalysisResult:
@@ -33,7 +31,6 @@ class YoloCropAnalysisResult:
     infertile_count: int
     dead_count: int
     crop_previews: tuple[EggCropPreview, ...]
-
 
 def analyze_egg_yolo_crop_sync(image_bytes: bytes) -> YoloCropAnalysisResult:
     buffer = np.frombuffer(image_bytes, dtype=np.uint8)

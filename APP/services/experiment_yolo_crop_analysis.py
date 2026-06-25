@@ -15,13 +15,11 @@ from APP.services.encode_png import rgba_uint8_to_png_bytes
 from APP.services.remove_background import remove_background
 from APP.utils.upload_validation import safe_label_for_filename
 
-
 @dataclass(frozen=True)
 class EggClassificationRow:
     egg_index: int
     classification_label: str
     confidence_score: float
-
 
 @dataclass(frozen=True)
 class YoloCropExperimentResult:
@@ -31,7 +29,6 @@ class YoloCropExperimentResult:
     infertile_count: int
     dead_count: int
     egg_classifications: tuple[EggClassificationRow, ...]
-
 
 def run_yolo_crop_experiment_sync(
     image_bytes: bytes,

@@ -8,7 +8,6 @@ T = TypeVar("T")
 
 DEFAULT_INFERENCE_TIMEOUT_SECONDS = 300
 
-
 async def run_sync_with_inference_timeout(
     func: Callable[[], T],
     *,

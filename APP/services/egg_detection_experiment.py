@@ -10,7 +10,6 @@ _YOLO_CONF = 0.85
 _YOLO_IOU = 0.4
 _yolo_model = None
 
-
 def _load_yolo_model():
     global _yolo_model
     if _yolo_model is None:
@@ -21,7 +20,6 @@ def _load_yolo_model():
         _yolo_model = YOLO(str(_YOLO_MODEL_PATH))
     return _yolo_model
 
-
 def detect_egg_boxes_xyxy(image_bgr: np.ndarray) -> np.ndarray:
     model = _load_yolo_model()
     result = model(image_bgr, conf=_YOLO_CONF, iou=_YOLO_IOU)[0]
@@ -29,10 +27,8 @@ def detect_egg_boxes_xyxy(image_bgr: np.ndarray) -> np.ndarray:
         return np.zeros((0, 4), dtype=np.float32)
     return result.boxes.xyxy.cpu().numpy()
 
-
 def _rects_overlap(rect_a: tuple[int, int, int, int], rect_b: tuple[int, int, int, int]) -> bool:
     return not (rect_a[2] < rect_b[0] or rect_a[0] > rect_b[2] or rect_a[3] < rect_b[1] or rect_a[1] > rect_b[3])
-
 
 def render_detection_overlay_jpeg(
     image_bgr: np.ndarray,
@@ -42,11 +38,11 @@ def render_detection_overlay_jpeg(
     overlay = image_bgr.copy()
     height_img, width_img = overlay.shape[:2]
     font = cv2.FONT_HERSHEY_SIMPLEX
-    base_scale = 0.58
-    min_scale = 0.26
-    thickness = 2
-    pad = 8
-    gap = 6
+    base_scale = 0.45
+    min_scale = 0.18
+    thickness = 1
+    pad = 4
+    gap = 4
     placed: list[tuple[int, int, int, int]] = []
 
     for (x1, y1, x2, y2), item in zip(boxes_xyxy, per_egg):
@@ -66,7 +62,8 @@ def render_detection_overlay_jpeg(
         else:
             text = f"Telur {egg_number}"
 
-        max_text_width = max(20, width_img - (pad * 2))
+        box_width = max(20, x2 - x1)
+        max_text_width = box_width
         scale = base_scale
         (text_width, text_height), baseline = cv2.getTextSize(text, font, scale, thickness)
         while text_width > max_text_width and scale > min_scale:

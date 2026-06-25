@@ -9,14 +9,12 @@ _MODEL_PATH = _REPO_ROOT / "models" / "model_cnn_v2.h5"
 _CLASS_NAMES_PATH = _REPO_ROOT / "models" / "class_names.json"
 CNN_INPUT_EDGE = 224
 
-
 @dataclass(frozen=True)
 class EggCNNClassification:
     classification_label: str
     confidence_score: float
     is_fertile: bool
     is_mati: bool
-
 
 def _read_class_names() -> list[str]:
     if not _CLASS_NAMES_PATH.is_file():
@@ -27,7 +25,6 @@ def _read_class_names() -> list[str]:
         raise ValueError("Class names file is invalid. It must be a non-empty JSON array.")
     return [str(item) for item in data]
 
-
 def _load_cnn_and_classes():
     if not _MODEL_PATH.is_file():
         raise ValueError("CNN model file was not found at models/model_cnn_v2.h5.")
@@ -37,10 +34,8 @@ def _load_cnn_and_classes():
     names = _read_class_names()
     return model, names
 
-
 _cnn_model, _class_names = _load_cnn_and_classes()
 _cnn_model.predict(np.zeros((1, CNN_INPUT_EDGE, CNN_INPUT_EDGE, 3), dtype=np.float32), verbose=0)
-
 
 def resize_rgba_to_cnn_edge(rgba: np.ndarray) -> np.ndarray:
     import cv2
@@ -51,7 +46,6 @@ def resize_rgba_to_cnn_edge(rgba: np.ndarray) -> np.ndarray:
     if h == CNN_INPUT_EDGE and w == CNN_INPUT_EDGE:
         return rgba
     return cv2.resize(rgba, (CNN_INPUT_EDGE, CNN_INPUT_EDGE), interpolation=cv2.INTER_LINEAR)
-
 
 def classify_egg_from_image_bytes(image_bytes: bytes) -> EggCNNClassification:
     import tensorflow as tf

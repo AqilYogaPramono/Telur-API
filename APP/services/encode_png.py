@@ -1,7 +1,6 @@
 import cv2
 import numpy as np
 
-
 def rgba_uint8_to_png_bytes(rgba: np.ndarray) -> bytes | None:
     if rgba.ndim != 3 or rgba.shape[2] != 4:
         raise ValueError("Expected an RGBA image with shape HxWx4.")
