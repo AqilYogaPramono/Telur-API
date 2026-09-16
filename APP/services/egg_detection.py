@@ -51,11 +51,11 @@ def render_detection_overlay_jpeg(
 
     for (x1, y1, x2, y2), item in zip(boxes_xyxy, per_egg):
         if item.get("is_mati"):
-            color = (0, 140, 255)
+            color = (0, 0, 255)
         elif item["is_fertile"]:
             color = (0, 200, 0)
         else:
-            color = (0, 0, 255)
+            color = (0, 140, 255)
         cv2.rectangle(overlay, (x1, y1), (x2, y2), color, 2)
 
         egg_number = item["egg_number"]
